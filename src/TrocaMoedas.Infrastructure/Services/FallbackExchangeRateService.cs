@@ -22,21 +22,20 @@ public class FallbackExchangeRateService : IExchangeRateService
         {
             foreach (var currency in FallbackRates.Keys)
             {
-                rates[currency] = FallbackRates[currency];
+                rates[currency] = 1.0 / FallbackRates[currency];
             }
         }
         else
         {
-            var brlRate = FallbackRates.TryGetValue(baseCurrency, out var rate) ? rate : 1.0;
+            var brlPerBase = FallbackRates.TryGetValue(baseCurrency, out var rate) ? rate : 1.0;
 
-            rates[Currency.BRL] = 1.0 / brlRate;
+            rates[Currency.BRL] = brlPerBase;
 
             foreach (var currency in FallbackRates.Keys)
             {
                 if (currency != baseCurrency)
                 {
-                    var otherBrlRate = FallbackRates[currency];
-                    rates[currency] = otherBrlRate / brlRate;
+                    rates[currency] = brlPerBase / FallbackRates[currency];
                 }
             }
         }
