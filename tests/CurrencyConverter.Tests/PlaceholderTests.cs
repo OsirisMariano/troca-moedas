@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace CurrencyConverter.Tests;
 
 public class PlaceholderTests
