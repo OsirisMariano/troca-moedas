@@ -115,7 +115,7 @@ A migração para Clean Architecture foi implementada com sucesso:
 | 2️⃣ | P-02-02 | Testes unitários - Models e Extensions | 5 | ✅ 23 testes (PR #27) |
 | 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | 🔄 Em andamento + correção bug inversão de taxas |
 | 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | 🔄 Em andamento — Mock HTTP, sem chamada real |
-| 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | Mock service/repositorio |
+| 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | 🔄 Em andamento — lógica extraída para `ConversionService` (Application) |
 | 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | DB em memória, testa CRUD |
 | 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | Relatório gerado |
 | 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | Decisões documentadas na issue #23 |
@@ -131,6 +131,11 @@ CacheService é último (menor prioridade técnica atual).
 **🔧 Correção incluída na P-02-03**: `FallbackExchangeRateService.GetRatesAsync` tinha
 semântica invertida (R$100 → $500 no fallback). As taxas agora seguem a convenção
 "1 unidade da moeda = X da moeda base" e `GetRate`/`Convert` ficam consistentes.
+
+**🏗️ Refactor da P-02-05**: a lógica de conversão que vivia dentro do
+`ConvertCommand` (buscar taxas, calcular, salvar no SQLite) foi extraída para
+`ConversionService` na camada Application. O command virou uma casca fina de UI,
+e a lógica se tornou testável com mocks (issue #15).
 
 ---
 
