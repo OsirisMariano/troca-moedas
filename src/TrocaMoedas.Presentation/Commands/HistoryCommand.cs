@@ -23,7 +23,12 @@ public class HistoryCommand
             AnsiConsole.WriteLine();
 
             AnsiConsole.MarkupLine("[bold yellow]Quantas conversões deseja ver? (padrão 10):[/]");
-            var input = Console.ReadLine();
+            var input = ConsoleInput.ReadLine();
+            if (ConsoleInput.IsEof(input))
+            {
+                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                return;
+            }
             
             var count = 10;
             if (!string.IsNullOrWhiteSpace(input) && int.TryParse(input, out var parsed))
@@ -67,7 +72,10 @@ public class HistoryCommand
 
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-            Console.ReadLine();
+            if (ConsoleInput.IsEof(ConsoleInput.ReadLine()))
+            {
+                return;
+            }
         }
         catch (Exception ex)
         {

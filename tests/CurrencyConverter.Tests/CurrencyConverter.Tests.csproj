@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\TrocaMoedas.Application\TrocaMoedas.Application.csproj" />
     <ProjectReference Include="..\..\src\TrocaMoedas.Domain\TrocaMoedas.Domain.csproj" />
     <ProjectReference Include="..\..\src\TrocaMoedas.Infrastructure\TrocaMoedas.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\TrocaMoedas.Presentation\TrocaMoedas.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

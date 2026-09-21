@@ -42,7 +42,13 @@ public class ConvertCommand
             AnsiConsole.WriteLine();
 
             AnsiConsole.MarkupLine("[bold yellow]Digite o número da moeda de origem:[/]");
-            var fromInput = Console.ReadLine();
+            var fromInput = ConsoleInput.ReadLine();
+            if (ConsoleInput.IsEof(fromInput))
+            {
+                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                return;
+            }
+
             if (!int.TryParse(fromInput, out var fromIndex) || fromIndex < 1 || fromIndex > currencies.Count)
             {
                 AnsiConsole.MarkupLine("[red]Opção inválida. Tente novamente.[/]");
@@ -73,7 +79,13 @@ public class ConvertCommand
             AnsiConsole.WriteLine();
 
             AnsiConsole.MarkupLine("[bold yellow]Digite o número da moeda de destino:[/]");
-            var toInput = Console.ReadLine();
+            var toInput = ConsoleInput.ReadLine();
+            if (ConsoleInput.IsEof(toInput))
+            {
+                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                return;
+            }
+
             if (!int.TryParse(toInput, out var toIndex) || toIndex < 1 || toIndex > currencies.Count)
             {
                 AnsiConsole.MarkupLine("[red]Opção inválida. Tente novamente.[/]");
@@ -82,7 +94,13 @@ public class ConvertCommand
             }
 
             AnsiConsole.MarkupLine("[bold yellow]Digite o valor:[/]");
-            var amountInput = Console.ReadLine();
+            var amountInput = ConsoleInput.ReadLine();
+            if (ConsoleInput.IsEof(amountInput))
+            {
+                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                return;
+            }
+
             if (!double.TryParse(amountInput, out var amount) || amount <= 0)
             {
                 AnsiConsole.MarkupLine("[red]O valor deve ser maior que zero.[/]");
