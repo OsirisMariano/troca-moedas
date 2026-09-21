@@ -112,9 +112,9 @@ A migração para Clean Architecture foi implementada com sucesso:
 | Ordem | ID | Tarefa | SP | Critério de Aceite |
 |-------|----|--------|-----|-------------------|
 | 1️⃣ | P-02-01 | Configurar projeto de testes + dependências (xUnit, Moq) | 3 | ✅ Projeto tests pronto (PR #26) |
-| 2️⃣ | P-02-02 | Testes unitários - Models e Extensions | 5 | Currency, ExchangeRate, Conversion |
-| 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | Cobertura 80%+ |
-| 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | Mock HTTP, sem chamada real |
+| 2️⃣ | P-02-02 | Testes unitários - Models e Extensions | 5 | ✅ 23 testes (PR #27) |
+| 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | 🔄 Em andamento + correção bug inversão de taxas |
+| 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | 🔄 Em andamento — Mock HTTP, sem chamada real |
 | 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | Mock service/repositorio |
 | 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | DB em memória, testa CRUD |
 | 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | Relatório gerado |
@@ -127,6 +127,10 @@ A migração para Clean Architecture foi implementada com sucesso:
 
 **⚠️ Importante**: Testes vêm primeiro para validar código existente.
 CacheService é último (menor prioridade técnica atual).
+
+**🔧 Correção incluída na P-02-03**: `FallbackExchangeRateService.GetRatesAsync` tinha
+semântica invertida (R$100 → $500 no fallback). As taxas agora seguem a convenção
+"1 unidade da moeda = X da moeda base" e `GetRate`/`Convert` ficam consistentes.
 
 ---
 
