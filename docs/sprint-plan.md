@@ -137,6 +137,14 @@ semântica invertida (R$100 → $500 no fallback). As taxas agora seguem a conve
 `ConversionService` na camada Application. O command virou uma casca fina de UI,
 e a lógica se tornou testável com mocks (issue #15).
 
+**🖥️ P-02-05b (fix interatividade)**: quando o app roda sem TTY/`stdin`
+anexado (Ex.: container solto com `docker compose up`), `Console.ReadLine()`
+retornava `null` e o menu entrava em loop infinito de "Opção inválida" — a tela
+parecia congelada e não aceitava dígitos. Agora o EOF é detectado
+(`ConsoleInput.IsEof`) e o app **encerra de forma limpa** no menu, no convert e
+no histórico. Recomenda-se `docker compose down` antes de `up` e, como
+alternativa garantida, `docker compose run --rm app`.
+
 ---
 
 ### 🔴 Sprint 3: Infra & Deploy (Semana 4 do PRD)

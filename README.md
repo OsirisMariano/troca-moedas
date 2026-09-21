@@ -45,6 +45,21 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 docker compose up --build
 ```
 
+> **Interatividade:** rode em um terminal real e mantenha o app em primeiro
+> plano. Se a tela "congelar" sem aceitar dígitos, é porque um container antigo
+> ficou rodando solto:
+> ```bash
+> docker compose down        # derruba containers antigos
+> docker compose up --build  # sobe de novo (agora interativo)
+> ```
+> Alternativa que sempre anexa o stdin:
+> ```bash
+> docker compose run --rm app
+> ```
+> Se o app for executado sem terminal (Ex.: redirecionamento de entrada), ele
+> encerra com a mensagem *"Entrada desconectada (EOF)"* em vez de travar — sem TTY
+> o app não tem para onde ler os números da conversão.
+
 ### Sem Docker
 
 ```bash
