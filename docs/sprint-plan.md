@@ -116,7 +116,7 @@ A migração para Clean Architecture foi implementada com sucesso:
 | 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | 🔄 Em andamento + correção bug inversão de taxas |
 | 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | 🔄 Em andamento — Mock HTTP, sem chamada real |
 | 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | 🔄 Em andamento — lógica extraída para `ConversionService` (Application) |
-| 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | DB em memória, testa CRUD |
+| 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | ✅ 6 testes (SQLite em memória, cache compartilhado) |
 | 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | Relatório gerado |
 | 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | Decisões documentadas na issue #23 |
 | 9️⃣ | P-02-08 | Implementar `CacheService` (1h cache) | 5 | Cacheia taxas, expire após 1h |
