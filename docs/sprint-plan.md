@@ -1,8 +1,9 @@
 # 📋 Plano de Sprints - Conversor de Moedas Pro (v2.0)
 
 > **Product Owner**: Análise e planejamento criados em 2026-08-20
+> **Última sincronização**: 2026-11-10 — release da Sprint 2 na `main` (PR #33)
 > **Baseado no**: docs/PRD.md
-> **Status do Projeto**: **50% completo** - Clean Architecture implementada ✅
+> **Status do Projeto**: Clean Architecture concluída; Sprint 2 ~63% (31 de 49 SP); Sprint 3 não iniciada
 > **Arquitetura**: Clean Architecture (4 projetos separados)
 > **Ordem**: Cronológica - siga de cima para baixo para evitar quebras
 
@@ -113,17 +114,19 @@ A migração para Clean Architecture foi implementada com sucesso:
 |-------|----|--------|-----|-------------------|
 | 1️⃣ | P-02-01 | Configurar projeto de testes + dependências (xUnit, Moq) | 3 | ✅ Projeto tests pronto (PR #26) |
 | 2️⃣ | P-02-02 | Testes unitários - Models e Extensions | 5 | ✅ 23 testes (PR #27) |
-| 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | 🔄 Em andamento + correção bug inversão de taxas |
-| 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | 🔄 Em andamento — Mock HTTP, sem chamada real |
-| 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | 🔄 Em andamento — lógica extraída para `ConversionService` (Application) |
-| 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | ✅ 6 testes (SQLite em memória, cache compartilhado) |
-| 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | Relatório gerado |
-| 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | Decisões documentadas na issue #23 |
-| 9️⃣ | P-02-08 | Implementar `CacheService` (1h cache) | 5 | Cacheia taxas, expire após 1h |
-| 🔟 | P-02-04a | Implementar backoff exponencial para rate limits da API | 3 | Retry com backoff 1s→2s→4s→8s, máx 3 tentativas |
-| 1️⃣1️⃣ | P-02-06a | Implementar botão "Limpar histórico" na UI | 3 | Opção no menu, confirmação antes de apagar |
+| 3️⃣ | P-02-03 | Testes unitários - FallbackExchangeRateService | 5 | ✅ 9 testes + correção da inversão de taxas (PR #28) |
+| 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | ✅ 4 testes com HTTP mockado, sem chamada real (PR #28) |
+| 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | ✅ Lógica extraída para `ConversionService` + 4 testes com mocks (PR #29) |
+| 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | ✅ 6 testes (SQLite em memória, cache compartilhado) (PR #32) |
+| 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | 🔄 Em andamento — cobertura atual 44,8% (foco em `Presentation`) |
+| 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | 🔲 Pendente — decisões na issue #23 |
+| 9️⃣ | P-02-08 | Implementar `CacheService` (1h cache) | 5 | 🔲 Pendente — issue #18 |
+| 🔟 | P-02-04a | Implementar backoff exponencial para rate limits da API | 3 | 🔲 Pendente — issue #25 |
+| 1️⃣1️⃣ | P-02-06a | Implementar botão "Limpar histórico" na UI | 3 | 🔲 Pendente — issue #24 |
 
 **Total Sprint 2**: 49 SP | **Duração**: 7-10 dias | **Time**: 2 devs
+
+**Progresso**: 31 de 49 SP concluídos (P-02-01..06). Restantes: P-02-07, P-02-08a/08, P-02-04a e P-02-06a.
 
 **⚠️ Importante**: Testes vêm primeiro para validar código existente.
 CacheService é último (menor prioridade técnica atual).
@@ -137,7 +140,7 @@ semântica invertida (R$100 → $500 no fallback). As taxas agora seguem a conve
 `ConversionService` na camada Application. O command virou uma casca fina de UI,
 e a lógica se tornou testável com mocks (issue #15).
 
-**🖥️ P-02-05b (fix interatividade)**: quando o app roda sem TTY/`stdin`
+**🖥️ P-02-05b (fix interatividade, PR #31)**: quando o app roda sem TTY/`stdin`
 anexado (Ex.: container solto com `docker compose up`), `Console.ReadLine()`
 retornava `null` e o menu entrava em loop infinito de "Opção inválida" — a tela
 parecia congelada e não aceitava dígitos. Agora o EOF é detectado
@@ -204,12 +207,10 @@ alternativa garantida, `docker compose run --rm app`.
 
 ### Estado dos Critérios de Aceite do MVP
 
-### Estado dos Critérios de Aceite do MVP
-
 - [x] Conversão entre BRL e 5+ moedas com taxa real
 - [x] Interface de menu com Spectre.Console (setas, tabelas)
 - [x] Histórico persistido em SQLite e consultável ✅ **VALIDADO**
-- [ ] Testes unitários passando com 80%+ cobertura
+- [ ] Testes unitários passando com 80%+ cobertura (atual: 44,8% — P-02-07)
 - [x] `docker compose up --build` funcional (dev) ✅ **VALIDADO**
 - [ ] `docker compose -f docker-compose.prod.yml up --build` funcional (prod) ← Ainda não criado
 - [ ] CI verde no GitHub Actions ← Pendente

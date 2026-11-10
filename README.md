@@ -62,6 +62,8 @@ docker compose up --build
 
 ### Sem Docker
 
+> Requer o **.NET SDK 10** instalado (o projeto tem como alvo `net10.0`).
+
 ```bash
 dotnet run --project src/TrocaMoedas.Presentation
 ```
@@ -127,12 +129,12 @@ troca-moedas/
 - [x] Interface terminal com Spectre.Console
 - [x] Docker dev (hot reload)
 
-### Sprint 2 — Cache & Testes
-- [ ] Projeto de testes (xUnit + Moq)
-- [ ] Testes unitários: Models, Services, Commands
-- [ ] Testes de integração: SQLite
+### Sprint 2 — Cache & Testes (em andamento)
+- [x] Projeto de testes (xUnit + Moq)
+- [x] Testes unitários: Models, Services, Commands
+- [x] Testes de integração: SQLite
 - [ ] Cache de taxas (1h TTL)
-- [ ] Cobertura 80%+
+- [ ] Cobertura 80%+ (atual: 44,8%)
 
 ### Sprint 3 — Deploy & CI/CD
 - [ ] Dockerfile multi-stage produção
