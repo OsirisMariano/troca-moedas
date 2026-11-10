@@ -22,6 +22,7 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 - Taxas de câmbio em tempo real via API, com fallback automático
 - Interface de terminal com tabelas, cores e menus navegáveis
 - Validação de entrada em todas as etapas
+- Valores aceitam ponto ou vírgula decimal (`100.50` ou `100,50`)
 - Suporte a conversão entre quaisquer duas moedas da lista
 - Ambiente 100% containerizado com Docker
 
@@ -46,16 +47,31 @@ docker compose up --build
 ```
 
 > **Interatividade:** rode em um terminal real e mantenha o app em primeiro
-> plano. Se a tela "congelar" sem aceitar dígitos, é porque um container antigo
-> ficou rodando solto:
-> ```bash
-> docker compose down        # derruba containers antigos
-> docker compose up --build  # sobe de novo (agora interativo)
-> ```
-> Alternativa que sempre anexa o stdin:
-> ```bash
-> docker compose run --rm app
-> ```
+> plano. Se a tela ficar em branco ou "congelar" sem aceitar dígitos:
+>
+> 1. Derrube containers antigos e suba de novo:
+>    ```bash
+>    docker compose down
+>    docker compose up --build
+>    ```
+> 2. Se continuar travado, rode anexando o stdin:
+>    ```bash
+>    docker compose run --rm app
+>    ```
+> 3. Se a tela ainda não renderizar, o Compose pode ter criado o TTY do
+>    container com tamanho `0x0`. O app detecta isso e usa 80 colunas, mas a
+>    opção mais confiável é rodar direto com Docker, que propaga o tamanho do
+>    terminal:
+>    ```bash
+>    docker run --rm -it \
+>      -v "$PWD":/app \
+>      -v troca-moedas_app-data:/app/data \
+>      -w /app \
+>      -e TERM=xterm-256color \
+>      mcr.microsoft.com/dotnet/sdk:10.0 \
+>      dotnet run --project src/TrocaMoedas.Presentation
+>    ```
+>
 > Se o app for executado sem terminal (Ex.: redirecionamento de entrada), ele
 > encerra com a mensagem *"Entrada desconectada (EOF)"* em vez de travar — sem TTY
 > o app não tem para onde ler os números da conversão.
@@ -76,6 +92,12 @@ Para usar taxas em tempo real, configure sua API key:
 export EXCHANGE_RATE_API_KEY=sua-chave-aqui
 ```
 
+> O `docker-compose.yml` repassa essa variável automaticamente para o container.
+> Também é possível rodar:
+> ```bash
+> EXCHANGE_RATE_API_KEY=sua-chave-aqui docker compose up --build
+> ```
+>
 > Se não configurada, o sistema usa taxas de fallback automaticamente.
 
 ## Estrutura do Projeto

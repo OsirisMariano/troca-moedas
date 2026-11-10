@@ -101,9 +101,9 @@ public class ConvertCommand
                 return;
             }
 
-            if (!double.TryParse(amountInput, out var amount) || amount <= 0)
+            if (!ConsoleInput.TryParseAmount(amountInput, out var amount))
             {
-                AnsiConsole.MarkupLine("[red]O valor deve ser maior que zero.[/]");
+                AnsiConsole.MarkupLine("[red]Valor inválido. Informe um número maior que zero (ex.: 100 ou 100,50).[/]");
                 await Task.Delay(1500);
                 return;
             }

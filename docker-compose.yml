@@ -13,6 +13,7 @@ services:
       - TERM=xterm-256color
       - DOTNET_CLI_TELEMETRY_OPTOUT=1
       - DOTNET_NOLOGO=1
+      - EXCHANGE_RATE_API_KEY=${EXCHANGE_RATE_API_KEY:-}
 
 volumes:
   app-data:
