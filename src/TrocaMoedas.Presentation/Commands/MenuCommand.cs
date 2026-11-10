@@ -21,6 +21,8 @@ public class MenuCommand
             try
             {
                 Console.Clear();
+                TerminalUi.Configure();
+                TerminalUi.ShowWarningIfNeeded();
 
                 AnsiConsole.Write(new FigletText("Conversor de Moedas").Color(Color.Blue));
                 AnsiConsole.WriteLine();
