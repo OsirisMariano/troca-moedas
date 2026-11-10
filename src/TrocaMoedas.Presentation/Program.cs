@@ -59,6 +59,8 @@ public class Program
 
         services.AddSingleton(sp => new DatabaseInitializer(connectionString));
 
+        services.AddSingleton<ConversionService>();
+
         services.AddTransient<ConvertCommand>();
         services.AddTransient<HistoryCommand>();
         services.AddTransient<MenuCommand>();

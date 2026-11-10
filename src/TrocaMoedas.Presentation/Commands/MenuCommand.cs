@@ -40,7 +40,13 @@ public class MenuCommand
 
                 AnsiConsole.MarkupLine("[bold yellow]Digite o número da opção:[/]");
                 
-                var input = Console.ReadLine();
+                var input = ConsoleInput.ReadLine();
+                if (ConsoleInput.IsEof(input))
+                {
+                    AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                    return;
+                }
+
                 if (!int.TryParse(input, out var index) || index < 1 || index > 4)
                 {
                     AnsiConsole.MarkupLine("[red]Opção inválida. Digite um número entre 1 e 4.[/]");
