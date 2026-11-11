@@ -127,6 +127,20 @@ export EXCHANGE_RATE_CACHE_TTL_MINUTES=30
 
 > O cache é em memória, separado por moeda base, e não persiste entre reinícios.
 
+## Testes
+
+```bash
+# testes
+docker run --rm -v "$PWD":/app -w /app \
+  mcr.microsoft.com/dotnet/sdk:10.0 dotnet test --nologo
+
+# cobertura (Domain + Application + Infrastructure) com limite de 80%
+./scripts/coverage.sh
+```
+
+> Estado atual: **135 testes** passando e **91% de cobertura de linhas** nas
+> camadas de negócio. O relatório fica em `coverage/coverage.cobertura.xml`.
+
 ## Estrutura do Projeto
 
 ```
@@ -141,7 +155,8 @@ troca-moedas/
 │   │       └── ExchangeRate.cs
 │   ├── TrocaMoedas.Application/         # Interfaces e DTOs
 │   │   ├── Services/
-│   │   │   └── IExchangeRateService.cs
+│   │   │   ├── IExchangeRateService.cs
+│   │   │   └── IExchangeRateCache.cs
 │   │   ├── Repositories/
 │   │   │   └── IConversionRepository.cs
 │   │   └── DTOs/
@@ -149,6 +164,8 @@ troca-moedas/
 │   ├── TrocaMoedas.Infrastructure/    # Implementações
 │   │   ├── Services/
 │   │   │   ├── ExchangeRateApiService.cs
+│   │   │   ├── InMemoryExchangeRateCache.cs
+│   │   │   ├── ResilientExchangeRateService.cs
 │   │   │   └── FallbackExchangeRateService.cs
 │   │   ├── Data/
 │   │   │   ├── DatabaseInitializer.cs
@@ -158,10 +175,15 @@ troca-moedas/
 │   │       └── AppConfig.cs
 │   └── TrocaMoedas.Presentation/      # UI e Orquestração
 │       ├── Program.cs
+│       ├── TerminalUi.cs
+│       ├── ConsoleInput.cs
 │       └── Commands/
 │           ├── MenuCommand.cs
 │           ├── ConvertCommand.cs
-│           └── HistoryCommand.cs
+│           ├── HistoryCommand.cs
+│           └── InputPrompts.cs
+├── scripts/
+│   └── coverage.sh
 ├── tests/
 │   └── CurrencyConverter.Tests/
 └── docs/
@@ -178,12 +200,14 @@ troca-moedas/
 - [x] Interface terminal com Spectre.Console
 - [x] Docker dev (hot reload)
 
-### Sprint 2 — Cache & Testes (em andamento)
+### Sprint 2 — Cache & Testes ✅
 - [x] Projeto de testes (xUnit + Moq)
 - [x] Testes unitários: Models, Services, Commands
 - [x] Testes de integração: SQLite
-- [ ] Cache de taxas (1h TTL)
-- [ ] Cobertura 80%+ (atual: 44,8%)
+- [x] Cache de taxas (1h TTL, configurável)
+- [x] Backoff exponencial e fallback automático em falhas da API
+- [x] Limpar histórico com confirmação
+- [x] Cobertura 80%+ (atual: 91% em Domain/Application/Infrastructure)
 
 ### Sprint 3 — Deploy & CI/CD
 - [ ] Dockerfile multi-stage produção
