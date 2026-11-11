@@ -44,7 +44,20 @@ public class HistoryCommand
                 AnsiConsole.MarkupLine($"[dim]Mostrando [white]{conversions.Count}[/] {label}.[/]");
             }
 
-            TerminalUi.WaitForEnter();
+            var action = PromptAction();
+            if (action is null)
+            {
+                ShowEof();
+                return;
+            }
+
+            if (action == HistoryAction.Clear)
+            {
+                if (!await ClearHistoryAsync())
+                {
+                    return;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -52,6 +65,101 @@ public class HistoryCommand
             TerminalUi.WaitForEnter();
         }
     }
+
+    private async Task<bool> ClearHistoryAsync()
+    {
+        var confirmation = PromptConfirmation("Tem certeza que deseja apagar todo o histórico?");
+        if (confirmation is null)
+        {
+            ShowEof();
+            return false;
+        }
+
+        if (!confirmation.Value)
+        {
+            AnsiConsole.MarkupLine("[yellow]Operação cancelada.[/]");
+            TerminalUi.WaitForEnter();
+            return true;
+        }
+
+        await _conversionRepository.ClearAsync();
+        AnsiConsole.MarkupLine("[green]✔ Histórico limpo com sucesso.[/]");
+        TerminalUi.WaitForEnter();
+        return true;
+    }
+
+    private static HistoryAction? PromptAction()
+    {
+        if (Console.IsInputRedirected)
+        {
+            while (true)
+            {
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine("[bold yellow]O que deseja fazer? (Enter=Voltar, 2=Limpar histórico)[/]");
+
+                var input = ConsoleInput.ReadLine();
+                if (ConsoleInput.IsEof(input))
+                {
+                    return null;
+                }
+
+                if (TryParseAction(input, out var action))
+                {
+                    return action;
+                }
+
+                AnsiConsole.MarkupLine("[red]Opção inválida. Digite 1 para voltar ou 2 para limpar.[/]");
+            }
+        }
+
+        AnsiConsole.WriteLine();
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<HistoryAction>()
+                .Title("[yellow]O que deseja fazer?[/]")
+                .UseConverter(action => action == HistoryAction.Clear
+                    ? "[red]Limpar histórico[/]"
+                    : "[green]Voltar ao menu[/]")
+                .AddChoices(HistoryAction.Back, HistoryAction.Clear));
+    }
+
+    private static bool? PromptConfirmation(string title)
+    {
+        if (Console.IsInputRedirected)
+        {
+            AnsiConsole.MarkupLine($"[bold yellow]{title} (s/n)[/]");
+
+            var input = ConsoleInput.ReadLine();
+            return ConsoleInput.IsEof(input) ? null : TryParseConfirmation(input);
+        }
+
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<bool>()
+                .Title($"[yellow]{title}[/]")
+                .UseConverter(value => value ? "[red]Sim, apagar[/]" : "[green]Não, cancelar[/]")
+                .AddChoices(false, true));
+    }
+
+    public static bool TryParseAction(string? input, out HistoryAction action)
+    {
+        switch (input?.Trim().ToLowerInvariant())
+        {
+            case "":
+            case "1":
+            case "voltar":
+                action = HistoryAction.Back;
+                return true;
+            case "2":
+            case "limpar":
+                action = HistoryAction.Clear;
+                return true;
+            default:
+                action = default;
+                return false;
+        }
+    }
+
+    public static bool TryParseConfirmation(string? input) =>
+        input?.Trim().ToLowerInvariant() is "s" or "sim" or "y" or "yes" or "1";
 
     private static void ShowHistoryTable(IReadOnlyList<Conversion> conversions)
     {

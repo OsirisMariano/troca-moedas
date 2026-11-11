@@ -37,20 +37,27 @@ public class Program
 
         services.AddSingleton(httpClient);
 
+        var cacheTtlMinutes = GetCacheTtlMinutes();
+        services.AddSingleton<IExchangeRateCache>(_ =>
+            new InMemoryExchangeRateCache(TimeSpan.FromMinutes(cacheTtlMinutes)));
+
         services.AddSingleton<IExchangeRateService>(sp =>
         {
+            var fallback = new FallbackExchangeRateService();
+
             if (string.IsNullOrEmpty(apiKey))
             {
                 AnsiConsole.MarkupLine("[yellow]⚠️  API key não configurada. Usando taxas de fallback.[/]");
                 AnsiConsole.MarkupLine("[dim]Configure EXCHANGE_RATE_API_KEY para usar taxas em tempo real.[/]");
                 AnsiConsole.WriteLine();
-                return new FallbackExchangeRateService();
+                return fallback;
             }
-            else
-            {
-                var client = sp.GetRequiredService<HttpClient>();
-                return new ExchangeRateApiService(client, apiKey);
-            }
+
+            var client = sp.GetRequiredService<HttpClient>();
+            var cache = sp.GetRequiredService<IExchangeRateCache>();
+            var primary = new ExchangeRateApiService(client, apiKey, cache, log: LogWarning);
+
+            return new ResilientExchangeRateService(primary, fallback, LogWarning);
         });
 
         services.AddSingleton<IConversionRepository>(sp =>
@@ -65,6 +72,15 @@ public class Program
         services.AddTransient<ConvertCommand>();
         services.AddTransient<HistoryCommand>();
         services.AddTransient<MenuCommand>();
+    }
+
+    private static void LogWarning(string message) =>
+        AnsiConsole.MarkupLine($"[yellow]{Markup.Escape(message)}[/]");
+
+    private static int GetCacheTtlMinutes()
+    {
+        var raw = Environment.GetEnvironmentVariable("EXCHANGE_RATE_CACHE_TTL_MINUTES");
+        return int.TryParse(raw, out var minutes) && minutes > 0 ? minutes : 60;
     }
 
     private static async Task InitializeDatabase(IServiceProvider serviceProvider)

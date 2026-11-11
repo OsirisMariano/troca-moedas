@@ -20,9 +20,11 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 ## Funcionalidades
 
 - Taxas de câmbio em tempo real via API, com fallback automático
+- Retry com backoff exponencial em rate limit (429) e erros 5xx
 - Interface de terminal com cabeçalho padronizado, cores e navegação por setas
 - Conversão em 3 etapas guiadas (origem, destino e valor)
 - Histórico com seleção de 10, 25, 50 ou todas as conversões
+- Opção de limpar todo o histórico com confirmação
 - Validação de entrada no próprio prompt, sem voltar ao menu
 - Valores aceitam ponto ou vírgula decimal (`100.50` ou `100,50`)
 - A moeda de origem é removida automaticamente das opções de destino
@@ -114,6 +116,30 @@ export EXCHANGE_RATE_API_KEY=sua-chave-aqui
 > ```
 >
 > Se não configurada, o sistema usa taxas de fallback automaticamente.
+> Se a API falhar, atingir o limite de requisições (429) ou a chave for inválida,
+> o app também cai para o fallback, sem interromper a conversão.
+
+Para ajustar o TTL do cache de taxas (padrão: 60 minutos):
+
+```bash
+export EXCHANGE_RATE_CACHE_TTL_MINUTES=30
+```
+
+> O cache é em memória, separado por moeda base, e não persiste entre reinícios.
+
+## Testes
+
+```bash
+# testes
+docker run --rm -v "$PWD":/app -w /app \
+  mcr.microsoft.com/dotnet/sdk:10.0 dotnet test --nologo
+
+# cobertura (Domain + Application + Infrastructure) com limite de 80%
+./scripts/coverage.sh
+```
+
+> Estado atual: **135 testes** passando e **91% de cobertura de linhas** nas
+> camadas de negócio. O relatório fica em `coverage/coverage.cobertura.xml`.
 
 ## Estrutura do Projeto
 
@@ -129,7 +155,8 @@ troca-moedas/
 │   │       └── ExchangeRate.cs
 │   ├── TrocaMoedas.Application/         # Interfaces e DTOs
 │   │   ├── Services/
-│   │   │   └── IExchangeRateService.cs
+│   │   │   ├── IExchangeRateService.cs
+│   │   │   └── IExchangeRateCache.cs
 │   │   ├── Repositories/
 │   │   │   └── IConversionRepository.cs
 │   │   └── DTOs/
@@ -137,6 +164,8 @@ troca-moedas/
 │   ├── TrocaMoedas.Infrastructure/    # Implementações
 │   │   ├── Services/
 │   │   │   ├── ExchangeRateApiService.cs
+│   │   │   ├── InMemoryExchangeRateCache.cs
+│   │   │   ├── ResilientExchangeRateService.cs
 │   │   │   └── FallbackExchangeRateService.cs
 │   │   ├── Data/
 │   │   │   ├── DatabaseInitializer.cs
@@ -146,10 +175,15 @@ troca-moedas/
 │   │       └── AppConfig.cs
 │   └── TrocaMoedas.Presentation/      # UI e Orquestração
 │       ├── Program.cs
+│       ├── TerminalUi.cs
+│       ├── ConsoleInput.cs
 │       └── Commands/
 │           ├── MenuCommand.cs
 │           ├── ConvertCommand.cs
-│           └── HistoryCommand.cs
+│           ├── HistoryCommand.cs
+│           └── InputPrompts.cs
+├── scripts/
+│   └── coverage.sh
 ├── tests/
 │   └── CurrencyConverter.Tests/
 └── docs/
@@ -166,12 +200,14 @@ troca-moedas/
 - [x] Interface terminal com Spectre.Console
 - [x] Docker dev (hot reload)
 
-### Sprint 2 — Cache & Testes (em andamento)
+### Sprint 2 — Cache & Testes ✅
 - [x] Projeto de testes (xUnit + Moq)
 - [x] Testes unitários: Models, Services, Commands
 - [x] Testes de integração: SQLite
-- [ ] Cache de taxas (1h TTL)
-- [ ] Cobertura 80%+ (atual: 44,8%)
+- [x] Cache de taxas (1h TTL, configurável)
+- [x] Backoff exponencial e fallback automático em falhas da API
+- [x] Limpar histórico com confirmação
+- [x] Cobertura 80%+ (atual: 91% em Domain/Application/Infrastructure)
 
 ### Sprint 3 — Deploy & CI/CD
 - [ ] Dockerfile multi-stage produção

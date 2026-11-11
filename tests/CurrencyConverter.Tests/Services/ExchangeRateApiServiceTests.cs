@@ -68,14 +68,112 @@ public class ExchangeRateApiServiceTests
     }
 
     [Fact]
-    public async Task GetRatesAsync_OnServerError_Throws()
+    public async Task GetRatesAsync_OnServerError_RetriesThenThrows()
     {
-        using var handler = new FakeHttpMessageHandler(_ =>
-            new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        var requests = 0;
 
-        var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey);
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+        });
+
+        var delays = new List<TimeSpan>();
+        var service = new ExchangeRateApiService(
+            new HttpClient(handler),
+            ApiKey,
+            delay: delay =>
+            {
+                delays.Add(delay);
+                return Task.CompletedTask;
+            });
 
         await Assert.ThrowsAsync<HttpRequestException>(() => service.GetRatesAsync(Currency.BRL));
+
+        Assert.Equal(3, requests);
+        Assert.Equal(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, delays);
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_OnTooManyRequests_RetriesAndSucceeds()
+    {
+        var requests = 0;
+        var payload = JsonDocument.Parse("""
+            { "conversion_rates": { "USD": 5.0 } }
+            """).RootElement;
+
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return requests < 3
+                ? new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+                : new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json")
+                };
+        });
+
+        var delays = new List<TimeSpan>();
+        var service = new ExchangeRateApiService(
+            new HttpClient(handler),
+            ApiKey,
+            delay: delay =>
+            {
+                delays.Add(delay);
+                return Task.CompletedTask;
+            });
+
+        var rate = await service.GetRatesAsync(Currency.BRL);
+
+        Assert.Equal(3, requests);
+        Assert.Equal(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }, delays);
+        Assert.Equal(5.0, rate.Rates[Currency.USD], precision: 6);
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_OnForbidden_DoesNotRetry()
+    {
+        var requests = 0;
+
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return new HttpResponseMessage(HttpStatusCode.Forbidden);
+        });
+
+        var service = new ExchangeRateApiService(
+            new HttpClient(handler),
+            ApiKey,
+            delay: _ => Task.CompletedTask);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.GetRatesAsync(Currency.BRL));
+
+        Assert.Equal(1, requests);
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_OnRetry_LogsAttempts()
+    {
+        var requests = 0;
+        var logs = new List<string>();
+
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        });
+
+        var service = new ExchangeRateApiService(
+            new HttpClient(handler),
+            ApiKey,
+            delay: _ => Task.CompletedTask,
+            log: logs.Add);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.GetRatesAsync(Currency.BRL));
+
+        Assert.Equal(2, logs.Count);
+        Assert.Contains("tentativa 1/3", logs[0]);
+        Assert.Contains("tentativa 2/3", logs[1]);
     }
 
     [Fact]
@@ -89,6 +187,57 @@ public class ExchangeRateApiServiceTests
         var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => service.GetRatesAsync(Currency.BRL));
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_WhenCacheHit_DoesNotCallApi()
+    {
+        var cache = new InMemoryExchangeRateCache(TimeSpan.FromHours(1));
+        var cached = new ExchangeRate
+        {
+            BaseCurrency = Currency.BRL,
+            Rates = new Dictionary<Currency, double> { [Currency.USD] = 0.2 }
+        };
+        cache.Set(cached);
+
+        var requests = 0;
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+
+        var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey, cache);
+
+        var rate = await service.GetRatesAsync(Currency.BRL);
+
+        Assert.Same(cached, rate);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_OnSuccess_StoresRateInCache()
+    {
+        var payload = JsonDocument.Parse("""
+            {
+              "result": "success",
+              "base_code": "BRL",
+              "conversion_rates": { "USD": 5.0 }
+            }
+            """).RootElement;
+
+        using var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json")
+        });
+
+        var cache = new InMemoryExchangeRateCache(TimeSpan.FromHours(1));
+        var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey, cache);
+
+        await service.GetRatesAsync(Currency.BRL);
+
+        Assert.True(cache.TryGet(Currency.BRL, out var cached));
+        Assert.Equal(5.0, cached.Rates[Currency.USD], precision: 6);
     }
 
     private sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder)

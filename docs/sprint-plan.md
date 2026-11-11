@@ -1,9 +1,9 @@
 # 📋 Plano de Sprints - Conversor de Moedas Pro (v2.0)
 
 > **Product Owner**: Análise e planejamento criados em 2026-08-20
-> **Última sincronização**: 2026-11-10 — release da Sprint 2 na `main` (PR #33)
+> **Última sincronização**: 2026-11-11 — Sprint 2 concluída e promovida para a `main` (PR #46)
 > **Baseado no**: docs/PRD.md
-> **Status do Projeto**: Clean Architecture concluída; Sprint 2 ~63% (31 de 49 SP); Sprint 3 não iniciada
+> **Status do Projeto**: Clean Architecture concluída; Sprint 2 concluída (49 de 49 SP); Sprint 3 não iniciada
 > **Arquitetura**: Clean Architecture (4 projetos separados)
 > **Ordem**: Cronológica - siga de cima para baixo para evitar quebras
 
@@ -118,15 +118,15 @@ A migração para Clean Architecture foi implementada com sucesso:
 | 4️⃣ | P-02-04 | Testes unitários - ExchangeRateApiService (mockada) | 5 | ✅ 4 testes com HTTP mockado, sem chamada real (PR #28) |
 | 5️⃣ | P-02-05 | Testes unitários - ConvertCommand (com mocks) | 5 | ✅ Lógica extraída para `ConversionService` + 4 testes com mocks (PR #29) |
 | 6️⃣ | P-02-06 | Testes de integração - SqliteConversionRepository | 8 | ✅ 6 testes (SQLite em memória, cache compartilhado) (PR #32) |
-| 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | 🔄 Em andamento — cobertura atual 44,8% (foco em `Presentation`) |
-| 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | 🔲 Pendente — decisões na issue #23 |
-| 9️⃣ | P-02-08 | Implementar `CacheService` (1h cache) | 5 | 🔲 Pendente — issue #18 |
-| 🔟 | P-02-04a | Implementar backoff exponencial para rate limits da API | 3 | 🔲 Pendente — issue #25 |
-| 1️⃣1️⃣ | P-02-06a | Implementar botão "Limpar histórico" na UI | 3 | 🔲 Pendente — issue #24 |
+| 7️⃣ | P-02-07 | Configurar cobertura de testes (80%+) | 3 | ✅ 91% de linhas (Domain/Application/Infrastructure) via `scripts/coverage.sh` |
+| 8️⃣ | P-02-08a | Definir design do CacheService (escopo, TTL, limites) | 2 | ✅ Decisões registradas na issue #23 |
+| 9️⃣ | P-02-08 | Implementar `CacheService` (1h cache) | 5 | ✅ Cache em memória por moeda base + TTL configurável (PR #43) |
+| 🔟 | P-02-04a | Implementar backoff exponencial para rate limits da API | 3 | ✅ Retry 429/5xx + fallback automático, inclusive 403 (PR #44) |
+| 1️⃣1️⃣ | P-02-06a | Implementar botão "Limpar histórico" na UI | 3 | ✅ Ação com confirmação no histórico (PR #42) |
 
 **Total Sprint 2**: 49 SP | **Duração**: 7-10 dias | **Time**: 2 devs
 
-**Progresso**: 31 de 49 SP concluídos (P-02-01..06). Restantes: P-02-07, P-02-08a/08, P-02-04a e P-02-06a.
+**Progresso**: 49 de 49 SP concluídos. Sprint 2 finalizada.
 
 **⚠️ Importante**: Testes vêm primeiro para validar código existente.
 CacheService é último (menor prioridade técnica atual).
@@ -197,9 +197,11 @@ alternativa garantida, `docker compose run --rm app`.
 
 ## ❓ Decisões Pendentes (convertidas em issues)
 
-1. **CacheService design** → [Issue #23](https://github.com/OsirisMariano/troca-moedas/issues/23) (P-02-08a)
-2. **Rate limits API** → [Issue #25](https://github.com/OsirisMariano/troca-moedas/issues/25) (P-02-04a)
-3. **Limpar histórico UI** → [Issue #24](https://github.com/OsirisMariano/troca-moedas/issues/24) (P-02-06a)
+Todas as decisões da Sprint 2 foram resolvidas e as issues fechadas:
+
+1. **CacheService design** → [Issue #23](https://github.com/OsirisMariano/troca-moedas/issues/23) — ✅ fechada (cache por moeda base, em memória, TTL configurável).
+2. **Rate limits API** → [Issue #25](https://github.com/OsirisMariano/troca-moedas/issues/25) — ✅ fechada (retry 429/5xx + fallback).
+3. **Limpar histórico UI** → [Issue #24](https://github.com/OsirisMariano/troca-moedas/issues/24) — ✅ fechada (ação com confirmação).
 
 ---
 
@@ -210,7 +212,7 @@ alternativa garantida, `docker compose run --rm app`.
 - [x] Conversão entre BRL e 5+ moedas com taxa real
 - [x] Interface de menu com Spectre.Console (setas, tabelas)
 - [x] Histórico persistido em SQLite e consultável ✅ **VALIDADO**
-- [ ] Testes unitários passando com 80%+ cobertura (atual: 44,8% — P-02-07)
+- [x] Testes unitários passando com 80%+ cobertura (atual: 91% em Domain/Application/Infrastructure) ✅ **VALIDADO**
 - [x] `docker compose up --build` funcional (dev) ✅ **VALIDADO**
 - [ ] `docker compose -f docker-compose.prod.yml up --build` funcional (prod) ← Ainda não criado
 - [ ] CI verde no GitHub Actions ← Pendente
@@ -249,9 +251,9 @@ docker compose exec app bash -c "apt install -y sqlite3 && sqlite3 /app/data/con
 
 | Tarefa | Bloqueia | Bloqueada Por |
 |--------|----------|---------------|
-| CacheService | ExchangeRateApiService com cache | Sprint 2 - CacheService |
-| Testes unitários - Services | CacheService implementado | Sprint 2 - CacheService |
-| Docker prod | Testes passando | Sprint 2 - Testes completos |
-| CI/CD | Docker prod + Testes | Sprint 2 - Testes + Sprint 3 - Docker |
+| CacheService | ExchangeRateApiService com cache | ✅ Concluído na Sprint 2 |
+| Testes unitários - Services | CacheService implementado | ✅ Concluído na Sprint 2 |
+| Docker prod | Testes passando | Sprint 3 - Dockerfile multi-stage |
+| CI/CD | Docker prod + Testes | Sprint 3 - Docker + testes |
 
 **💡 Dica**: Arquitetura concluída removeu a maior parte dos bloqueios. Foco agora em testes e infra.
