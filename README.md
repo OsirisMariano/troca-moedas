@@ -20,7 +20,7 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 ## Funcionalidades
 
 - Taxas de câmbio em tempo real via API, com fallback automático
-- Interface de terminal com tabelas, cores e menus navegáveis
+- Interface de terminal com tabelas, cores e menu navegável pelas setas
 - Validação de entrada em todas as etapas
 - Valores aceitam ponto ou vírgula decimal (`100.50` ou `100,50`)
 - Suporte a conversão entre quaisquer duas moedas da lista
@@ -72,9 +72,13 @@ docker compose up --build
 >      dotnet run --project src/TrocaMoedas.Presentation
 >    ```
 >
-> Se o app for executado sem terminal (Ex.: redirecionamento de entrada), ele
-> encerra com a mensagem *"Entrada desconectada (EOF)"* em vez de travar — sem TTY
-> o app não tem para onde ler os números da conversão.
+> Se o app for executado sem terminal (Ex.: redirecionamento de entrada), o menu
+> troca automaticamente para o modo numérico e o app encerra com a mensagem
+> *"Entrada desconectada (EOF)"* em vez de travar.
+>
+> **Menu:** em um terminal interativo, use as **setas ↑/↓** e **Enter** para
+> escolher a opção. Quando a entrada é redirecionada (pipe/CI), digite o número
+> da opção e pressione Enter.
 
 ### Sem Docker
 
