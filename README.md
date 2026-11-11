@@ -20,6 +20,7 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 ## Funcionalidades
 
 - Taxas de câmbio em tempo real via API, com fallback automático
+- Retry com backoff exponencial em rate limit (429) e erros 5xx
 - Interface de terminal com cabeçalho padronizado, cores e navegação por setas
 - Conversão em 3 etapas guiadas (origem, destino e valor)
 - Histórico com seleção de 10, 25, 50 ou todas as conversões
@@ -115,6 +116,8 @@ export EXCHANGE_RATE_API_KEY=sua-chave-aqui
 > ```
 >
 > Se não configurada, o sistema usa taxas de fallback automaticamente.
+> Se a API falhar, atingir o limite de requisições (429) ou a chave for inválida,
+> o app também cai para o fallback, sem interromper a conversão.
 
 Para ajustar o TTL do cache de taxas (padrão: 60 minutos):
 
