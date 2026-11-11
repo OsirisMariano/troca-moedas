@@ -1,7 +1,6 @@
 using Spectre.Console;
-using TrocaMoedas.Presentation.Commands;
 
-namespace TrocaMoedas.Presentation;
+namespace TrocaMoedas.Presentation.Commands;
 
 public class MenuCommand
 {
@@ -20,58 +19,37 @@ public class MenuCommand
         {
             try
             {
-                Console.Clear();
+                AnsiConsole.Clear();
                 TerminalUi.Configure();
                 TerminalUi.ShowWarningIfNeeded();
 
-                AnsiConsole.Write(new FigletText("Conversor de Moedas").Color(Color.Blue));
-                AnsiConsole.WriteLine();
+                ShowHeader();
 
-                var table = new Table()
-                    .Border(TableBorder.Rounded)
-                    .BorderColor(Color.Yellow)
-                    .AddColumn(new TableColumn("[bold]#[/]").Centered())
-                    .AddColumn(new TableColumn("[bold]Opção[/]").Centered())
-                    .AddRow("[yellow]1[/]", "💱 Converter Moeda")
-                    .AddRow("[yellow]2[/]", "📊 Histórico de Conversões")
-                    .AddRow("[yellow]3[/]", "⚙️  Configurações")
-                    .AddRow("[yellow]4[/]", "🚪 Sair");
-
-                AnsiConsole.Write(table);
-                AnsiConsole.WriteLine();
-
-                AnsiConsole.MarkupLine("[bold yellow]Digite o número da opção:[/]");
-                
-                var input = ConsoleInput.ReadLine();
-                if (ConsoleInput.IsEof(input))
+                var choice = PromptChoice();
+                if (choice is null)
                 {
                     AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
                     return;
                 }
 
-                if (!int.TryParse(input, out var index) || index < 1 || index > 4)
-                {
-                    AnsiConsole.MarkupLine("[red]Opção inválida. Digite um número entre 1 e 4.[/]");
-                    await Task.Delay(1500);
-                    continue;
-                }
+                AnsiConsole.Clear();
 
-                switch (index)
+                switch (choice.Value)
                 {
-                    case 1:
+                    case MenuChoice.Convert:
                         await _convertCommand.RunAsync();
                         break;
-                    case 2:
+                    case MenuChoice.History:
                         await _historyCommand.RunAsync();
                         break;
-                    case 3:
-                        AnsiConsole.MarkupLine("[yellow]Funcionalidade será implementada no Passo 3[/]");
-                        AnsiConsole.WriteLine();
-                        AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-                        Console.ReadLine();
+                    case MenuChoice.Settings:
+                        if (!ShowSettingsPlaceholder())
+                        {
+                            return;
+                        }
                         break;
-                    case 4:
-                        AnsiConsole.MarkupLine("[green]Obrigado por usar o Conversor de Moedas![/]");
+                    case MenuChoice.Exit:
+                        AnsiConsole.MarkupLine("[red bold]Encerrando aplicação. Até logo![/]");
                         return;
                 }
             }
@@ -79,8 +57,86 @@ public class MenuCommand
             {
                 AnsiConsole.MarkupLine($"[red]Erro: {ex.Message}[/]");
                 AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-                Console.ReadLine();
+                if (ConsoleInput.IsEof(ConsoleInput.ReadLine()))
+                {
+                    return;
+                }
             }
         }
+    }
+
+    public static bool TryParseChoice(string? input, out MenuChoice choice)
+    {
+        switch (input?.Trim())
+        {
+            case "1":
+                choice = MenuChoice.Convert;
+                return true;
+            case "2":
+                choice = MenuChoice.History;
+                return true;
+            case "3":
+                choice = MenuChoice.Settings;
+                return true;
+            case "4":
+                choice = MenuChoice.Exit;
+                return true;
+            default:
+                choice = default;
+                return false;
+        }
+    }
+
+    private static MenuChoice? PromptChoice()
+    {
+        if (Console.IsInputRedirected)
+        {
+            while (true)
+            {
+                AnsiConsole.MarkupLine("[bold yellow]Digite o número da opção:[/]");
+                var input = ConsoleInput.ReadLine();
+                if (ConsoleInput.IsEof(input))
+                {
+                    return null;
+                }
+
+                if (TryParseChoice(input, out var choice))
+                {
+                    return choice;
+                }
+
+                AnsiConsole.MarkupLine("[red]Opção inválida. Digite um número entre 1 e 4.[/]");
+            }
+        }
+
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<MenuChoice>()
+                .Title("[yellow]Use as setas para navegar e pressione [green]Enter[/]:[/]")
+                .PageSize(4)
+                .UseConverter(FormatChoice)
+                .AddChoices(Enum.GetValues<MenuChoice>()));
+    }
+
+    private static string FormatChoice(MenuChoice choice) => choice switch
+    {
+        MenuChoice.Convert => "[green]1. Converter Moeda[/]",
+        MenuChoice.History => "[blue]2. Histórico de Conversões[/]",
+        MenuChoice.Settings => "[blue]3. Configurações[/]",
+        MenuChoice.Exit => "[red]4. Sair[/]",
+        _ => choice.ToString()
+    };
+
+    private static void ShowHeader()
+    {
+        AnsiConsole.MarkupLine("[cyan bold]TrocaMoedas Pro[/] [dim]v2.0[/]  •  [grey]Ambiente: Docker / SQLite[/]");
+        AnsiConsole.MarkupLine("[grey]─────────────────────────────────────────────────────────────[/]");
+        AnsiConsole.WriteLine();
+    }
+
+    private static bool ShowSettingsPlaceholder()
+    {
+        AnsiConsole.MarkupLine("[cyan]⚙️ Módulo de Configurações em breve![/]");
+        AnsiConsole.MarkupLine("[dim]Pressione Enter para voltar ao menu...[/]");
+        return !ConsoleInput.IsEof(ConsoleInput.ReadLine());
     }
 }
