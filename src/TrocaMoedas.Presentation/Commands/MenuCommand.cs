@@ -19,11 +19,9 @@ public class MenuCommand
         {
             try
             {
-                AnsiConsole.Clear();
-                TerminalUi.Configure();
-                TerminalUi.ShowWarningIfNeeded();
+                TerminalUi.ConfigureScreen();
 
-                ShowHeader();
+                TerminalUi.ShowHeader("Ambiente: Docker / SQLite");
 
                 var choice = PromptChoice();
                 if (choice is null)
@@ -125,13 +123,6 @@ public class MenuCommand
         MenuChoice.Exit => "[red]4. Sair[/]",
         _ => choice.ToString()
     };
-
-    private static void ShowHeader()
-    {
-        AnsiConsole.MarkupLine("[cyan bold]TrocaMoedas Pro[/] [dim]v2.0[/]  •  [grey]Ambiente: Docker / SQLite[/]");
-        AnsiConsole.MarkupLine("[grey]─────────────────────────────────────────────────────────────[/]");
-        AnsiConsole.WriteLine();
-    }
 
     private static bool ShowSettingsPlaceholder()
     {
