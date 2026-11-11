@@ -91,6 +91,57 @@ public class ExchangeRateApiServiceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() => service.GetRatesAsync(Currency.BRL));
     }
 
+    [Fact]
+    public async Task GetRatesAsync_WhenCacheHit_DoesNotCallApi()
+    {
+        var cache = new InMemoryExchangeRateCache(TimeSpan.FromHours(1));
+        var cached = new ExchangeRate
+        {
+            BaseCurrency = Currency.BRL,
+            Rates = new Dictionary<Currency, double> { [Currency.USD] = 0.2 }
+        };
+        cache.Set(cached);
+
+        var requests = 0;
+        using var handler = new FakeHttpMessageHandler(_ =>
+        {
+            requests++;
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        });
+
+        var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey, cache);
+
+        var rate = await service.GetRatesAsync(Currency.BRL);
+
+        Assert.Same(cached, rate);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public async Task GetRatesAsync_OnSuccess_StoresRateInCache()
+    {
+        var payload = JsonDocument.Parse("""
+            {
+              "result": "success",
+              "base_code": "BRL",
+              "conversion_rates": { "USD": 5.0 }
+            }
+            """).RootElement;
+
+        using var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json")
+        });
+
+        var cache = new InMemoryExchangeRateCache(TimeSpan.FromHours(1));
+        var service = new ExchangeRateApiService(new HttpClient(handler), ApiKey, cache);
+
+        await service.GetRatesAsync(Currency.BRL);
+
+        Assert.True(cache.TryGet(Currency.BRL, out var cached));
+        Assert.Equal(5.0, cached.Rates[Currency.USD], precision: 6);
+    }
+
     private sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder)
         : HttpMessageHandler
     {

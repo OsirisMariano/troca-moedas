@@ -8,6 +8,7 @@ public class ExchangeRateApiService : IExchangeRateService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
+    private readonly IExchangeRateCache? _cache;
 
     private static readonly Dictionary<Currency, string> CurrencyCodes = new()
     {
@@ -19,14 +20,20 @@ public class ExchangeRateApiService : IExchangeRateService
         [Currency.ARS] = "ARS"
     };
 
-    public ExchangeRateApiService(HttpClient httpClient, string apiKey)
+    public ExchangeRateApiService(HttpClient httpClient, string apiKey, IExchangeRateCache? cache = null)
     {
         _httpClient = httpClient;
         _apiKey = apiKey;
+        _cache = cache;
     }
 
     public async Task<ExchangeRate> GetRatesAsync(Currency baseCurrency)
     {
+        if (_cache is not null && _cache.TryGet(baseCurrency, out var cached))
+        {
+            return cached;
+        }
+
         var code = CurrencyCodes[baseCurrency];
         var url = $"https://v6.exchangerate-api.com/v6/{_apiKey}/latest/{code}";
 
@@ -57,7 +64,10 @@ public class ExchangeRateApiService : IExchangeRateService
             }
         }
 
-        return exchangeRate with { Rates = ratesDict };
+        var result = exchangeRate with { Rates = ratesDict };
+        _cache?.Set(result);
+
+        return result;
     }
 
     public double Convert(Currency from, Currency to, double amount)

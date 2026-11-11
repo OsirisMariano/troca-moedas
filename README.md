@@ -116,6 +116,14 @@ export EXCHANGE_RATE_API_KEY=sua-chave-aqui
 >
 > Se não configurada, o sistema usa taxas de fallback automaticamente.
 
+Para ajustar o TTL do cache de taxas (padrão: 60 minutos):
+
+```bash
+export EXCHANGE_RATE_CACHE_TTL_MINUTES=30
+```
+
+> O cache é em memória, separado por moeda base, e não persiste entre reinícios.
+
 ## Estrutura do Projeto
 
 ```
