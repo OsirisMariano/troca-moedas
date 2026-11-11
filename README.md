@@ -20,10 +20,12 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 ## Funcionalidades
 
 - Taxas de câmbio em tempo real via API, com fallback automático
-- Interface de terminal com tabelas, cores e menu navegável pelas setas
-- Validação de entrada em todas as etapas
+- Interface de terminal com cabeçalho padronizado, cores e navegação por setas
+- Conversão em 3 etapas guiadas (origem, destino e valor)
+- Histórico com seleção de 10, 25, 50 ou todas as conversões
+- Validação de entrada no próprio prompt, sem voltar ao menu
 - Valores aceitam ponto ou vírgula decimal (`100.50` ou `100,50`)
-- Suporte a conversão entre quaisquer duas moedas da lista
+- A moeda de origem é removida automaticamente das opções de destino
 - Ambiente 100% containerizado com Docker
 
 ## Stack Tecnológica
@@ -79,6 +81,15 @@ docker compose up --build
 > **Menu:** em um terminal interativo, use as **setas ↑/↓** e **Enter** para
 > escolher a opção. Quando a entrada é redirecionada (pipe/CI), digite o número
 > da opção e pressione Enter.
+>
+> **Telas internas:** "Converter" e "Histórico" seguem o mesmo padrão. O destino
+> não lista a moeda de origem, e o valor aceita vírgula ou ponto. Exemplo de
+> execução sem TTY:
+> ```bash
+> # 1=Converter, 1=BRL, 1=USD (BRL removido do destino), 100,50, Enter
+> # 2=Histórico, 1=10 conversões, Enter, 4=Sair
+> printf '1\n1\n1\n100,50\n\n2\n1\n\n4\n' | docker compose run --rm -T app
+> ```
 
 ### Sem Docker
 

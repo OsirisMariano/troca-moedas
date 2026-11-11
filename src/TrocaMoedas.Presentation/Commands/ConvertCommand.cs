@@ -1,4 +1,5 @@
 using Spectre.Console;
+using TrocaMoedas.Application.DTOs;
 using TrocaMoedas.Application.Services;
 using TrocaMoedas.Domain.Models;
 
@@ -17,125 +18,78 @@ public class ConvertCommand
     {
         try
         {
-            Console.Clear();
-
-            AnsiConsole.MarkupLine("[bold blue]💱 Conversão de Moedas[/]");
-            AnsiConsole.WriteLine();
-
             var currencies = Enum.GetValues<Currency>().ToList();
 
-            var fromTable = new Table()
-                .Border(TableBorder.Rounded)
-                .BorderColor(Color.Blue)
-                .Title("[bold]Moeda de Origem[/]")
-                .AddColumn(new TableColumn("[bold]#[/]").Centered())
-                .AddColumn(new TableColumn("[bold]Moeda[/]").Centered())
-                .AddColumn(new TableColumn("[bold]Nome[/]").Centered());
+            TerminalUi.ConfigureScreen();
+            TerminalUi.ShowHeader("Início › Converter");
+            TerminalUi.ShowStep(1, 3, "Moeda de origem");
 
-            for (int i = 0; i < currencies.Count; i++)
+            var from = InputPrompts.PromptCurrency("Selecione a moeda de origem", currencies);
+            if (from is null)
             {
-                var c = currencies[i];
-                fromTable.AddRow($"[yellow]{i + 1}[/]", $"{c.GetSymbol()} {c}", c.GetName());
-            }
-
-            AnsiConsole.Write(fromTable);
-            AnsiConsole.WriteLine();
-
-            AnsiConsole.MarkupLine("[bold yellow]Digite o número da moeda de origem:[/]");
-            var fromInput = ConsoleInput.ReadLine();
-            if (ConsoleInput.IsEof(fromInput))
-            {
-                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                ShowEof();
                 return;
             }
 
-            if (!int.TryParse(fromInput, out var fromIndex) || fromIndex < 1 || fromIndex > currencies.Count)
+            var destinations = InputPrompts.DestinationsFor(currencies, from.Value);
+
+            TerminalUi.ConfigureScreen();
+            TerminalUi.ShowHeader("Início › Converter");
+            TerminalUi.ShowStep(2, 3, "Moeda de destino");
+
+            var to = InputPrompts.PromptCurrency("Selecione a moeda de destino", destinations);
+            if (to is null)
             {
-                AnsiConsole.MarkupLine("[red]Opção inválida. Tente novamente.[/]");
-                await Task.Delay(1500);
+                ShowEof();
                 return;
             }
 
-            Console.Clear();
+            TerminalUi.ConfigureScreen();
+            TerminalUi.ShowHeader("Início › Converter");
+            TerminalUi.ShowStep(3, 3, $"Valor em {from.Value}");
 
-            AnsiConsole.MarkupLine("[bold blue]💱 Conversão de Moedas[/]");
-            AnsiConsole.WriteLine();
-
-            var toTable = new Table()
-                .Border(TableBorder.Rounded)
-                .BorderColor(Color.Blue)
-                .Title("[bold]Moeda de Destino[/]")
-                .AddColumn(new TableColumn("[bold]#[/]").Centered())
-                .AddColumn(new TableColumn("[bold]Moeda[/]").Centered())
-                .AddColumn(new TableColumn("[bold]Nome[/]").Centered());
-
-            for (int i = 0; i < currencies.Count; i++)
+            var amount = InputPrompts.PromptAmount($"Valor em {from.Value} (ex.: 100 ou 100,50)");
+            if (amount is null)
             {
-                var c = currencies[i];
-                toTable.AddRow($"[yellow]{i + 1}[/]", $"{c.GetSymbol()} {c}", c.GetName());
-            }
-
-            AnsiConsole.Write(toTable);
-            AnsiConsole.WriteLine();
-
-            AnsiConsole.MarkupLine("[bold yellow]Digite o número da moeda de destino:[/]");
-            var toInput = ConsoleInput.ReadLine();
-            if (ConsoleInput.IsEof(toInput))
-            {
-                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                ShowEof();
                 return;
             }
 
-            if (!int.TryParse(toInput, out var toIndex) || toIndex < 1 || toIndex > currencies.Count)
-            {
-                AnsiConsole.MarkupLine("[red]Opção inválida. Tente novamente.[/]");
-                await Task.Delay(1500);
-                return;
-            }
+            var conversion = await _conversionService.ConvertAsync(from.Value, to.Value, amount.Value);
 
-            AnsiConsole.MarkupLine("[bold yellow]Digite o valor:[/]");
-            var amountInput = ConsoleInput.ReadLine();
-            if (ConsoleInput.IsEof(amountInput))
-            {
-                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
-                return;
-            }
-
-            if (!ConsoleInput.TryParseAmount(amountInput, out var amount))
-            {
-                AnsiConsole.MarkupLine("[red]Valor inválido. Informe um número maior que zero (ex.: 100 ou 100,50).[/]");
-                await Task.Delay(1500);
-                return;
-            }
-
-            var from = currencies[fromIndex - 1];
-            var to = currencies[toIndex - 1];
-
-            var conversion = await _conversionService.ConvertAsync(from, to, amount);
-
-            var table = new Table()
-                .Border(TableBorder.Rounded)
-                .BorderColor(Color.Green)
-                .Title("[bold green]Resultado[/]")
-                .AddColumn(new TableColumn("[bold]Detalhe[/]").Centered())
-                .AddColumn(new TableColumn("[bold]Valor[/]").Centered())
-                .AddRow("Moeda de Origem", $"{from.GetSymbol()} {conversion.Amount:N2} {from}")
-                .AddRow("Moeda de Destino", $"{to.GetSymbol()} {conversion.Result:N2} {to}")
-                .AddRow("Taxa de Câmbio", $"1 {from} = {conversion.Rate:N4} {to}")
-                .AddRow("Data/Hora", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"));
-
-            AnsiConsole.WriteLine();
-            AnsiConsole.Write(table);
-
-            AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-            Console.ReadLine();
+            ShowResult(conversion);
+            TerminalUi.WaitForEnter();
         }
         catch (Exception ex)
         {
             AnsiConsole.MarkupLine($"[red]Erro: {ex.Message}[/]");
-            AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-            Console.ReadLine();
+            TerminalUi.WaitForEnter();
         }
     }
+
+    private static void ShowResult(ConversionResult conversion)
+    {
+        var from = conversion.From;
+        var to = conversion.To;
+
+        var content = new Markup(
+            $"[green bold]{to.GetSymbol()} {conversion.Result:N2} {to}[/]\n\n" +
+            $"[grey]{from.GetSymbol()} {conversion.Amount:N2} {from}  →  1 {from} = {conversion.Rate:N4} {to}[/]\n" +
+            $"[dim]{DateTime.Now:dd/MM/yyyy HH:mm}[/]")
+        {
+            Justification = Justify.Center
+        };
+
+        var panel = new Panel(content)
+            .Header("[bold green] Conversão concluída [/]")
+            .Border(BoxBorder.Rounded)
+            .BorderColor(Color.Green)
+            .Padding(2, 1);
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(panel);
+    }
+
+    private static void ShowEof() =>
+        AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
 }

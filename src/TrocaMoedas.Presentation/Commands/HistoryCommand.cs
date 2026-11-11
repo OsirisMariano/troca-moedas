@@ -17,71 +17,87 @@ public class HistoryCommand
     {
         try
         {
-            Console.Clear();
+            TerminalUi.ConfigureScreen();
+            TerminalUi.ShowHeader("Início › Histórico");
 
-            AnsiConsole.MarkupLine("[bold blue]📊 Histórico de Conversões[/]");
-            AnsiConsole.WriteLine();
-
-            AnsiConsole.MarkupLine("[bold yellow]Quantas conversões deseja ver? (padrão 10):[/]");
-            var input = ConsoleInput.ReadLine();
-            if (ConsoleInput.IsEof(input))
+            var option = InputPrompts.PromptHistoryCount();
+            if (option is null)
             {
-                AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
+                ShowEof();
                 return;
             }
-            
-            var count = 10;
-            if (!string.IsNullOrWhiteSpace(input) && int.TryParse(input, out var parsed))
-            {
-                count = parsed >= 1 && parsed <= 100 ? parsed : 10;
-            }
 
-            var conversions = await _conversionRepository.GetRecentAsync(count);
+            var conversions = await _conversionRepository.GetRecentAsync(option.Count);
 
-            if (!conversions.Any())
+            TerminalUi.ConfigureScreen();
+            TerminalUi.ShowHeader("Início › Histórico");
+
+            if (conversions.Count == 0)
             {
-                AnsiConsole.MarkupLine("[dim]Nenhuma conversão encontrada.[/]");
+                ShowEmptyState();
             }
             else
             {
-                var table = new Table()
-                    .Border(TableBorder.Rounded)
-                    .BorderColor(Color.Blue)
-                    .Title("[bold]Histórico de Conversões[/]")
-                    .AddColumn("[bold]Data[/]")
-                    .AddColumn("[bold]Origem[/]")
-                    .AddColumn("[bold]Valor[/]")
-                    .AddColumn("[bold]Destino[/]")
-                    .AddColumn("[bold]Resultado[/]")
-                    .AddColumn("[bold]Taxa[/]");
-
-                foreach (var c in conversions)
-                {
-                    table.AddRow(
-                        c.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                        $"{c.FromCurrency.GetSymbol()} {c.FromCurrency}",
-                        $"{c.Amount:N2}",
-                        $"{c.ToCurrency.GetSymbol()} {c.ToCurrency}",
-                        $"{c.Result:N2}",
-                        $"{c.Rate:N4}"
-                    );
-                }
-
-                AnsiConsole.Write(table);
+                ShowHistoryTable(conversions);
+                AnsiConsole.WriteLine();
+                var label = conversions.Count == 1 ? "conversão" : "conversões";
+                AnsiConsole.MarkupLine($"[dim]Mostrando [white]{conversions.Count}[/] {label}.[/]");
             }
 
-            AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-            if (ConsoleInput.IsEof(ConsoleInput.ReadLine()))
-            {
-                return;
-            }
+            TerminalUi.WaitForEnter();
         }
         catch (Exception ex)
         {
             AnsiConsole.MarkupLine($"[red]Erro: {ex.Message}[/]");
-            AnsiConsole.MarkupLine("[dim]Pressione Enter para continuar...[/]");
-            Console.ReadLine();
+            TerminalUi.WaitForEnter();
         }
     }
+
+    private static void ShowHistoryTable(IReadOnlyList<Conversion> conversions)
+    {
+        var table = new Table()
+            .Border(TableBorder.Rounded)
+            .BorderColor(Color.Blue)
+            .Title("[bold]Histórico de Conversões[/]")
+            .AddColumn(new TableColumn("[bold]#[/]").RightAligned())
+            .AddColumn(new TableColumn("[bold]Data[/]"))
+            .AddColumn(new TableColumn("[bold]Origem[/]"))
+            .AddColumn(new TableColumn("[bold]Destino[/]"))
+            .AddColumn(new TableColumn("[bold]Taxa[/]").RightAligned());
+
+        for (var i = 0; i < conversions.Count; i++)
+        {
+            var conversion = conversions[i];
+
+            table.AddRow(
+                $"[dim]{i + 1}[/]",
+                $"[dim]{conversion.CreatedAt:dd/MM HH:mm}[/]",
+                $"[yellow]{conversion.FromCurrency.GetSymbol()} {conversion.Amount:N2} {conversion.FromCurrency}[/]",
+                $"[green bold]{conversion.ToCurrency.GetSymbol()} {conversion.Result:N2}[/] [green]{conversion.ToCurrency}[/]",
+                $"{conversion.Rate:N4}");
+        }
+
+        AnsiConsole.Write(table);
+    }
+
+    private static void ShowEmptyState()
+    {
+        var content = new Markup(
+            "[dim]Nenhuma conversão registrada até agora.[/]\n\n" +
+            "[dim]Faça sua primeira conversão na opção [white]1[/] do menu.[/]")
+        {
+            Justification = Justify.Center
+        };
+
+        var panel = new Panel(content)
+            .Header("[bold yellow] Nenhuma conversão ainda [/]")
+            .Border(BoxBorder.Rounded)
+            .BorderColor(Color.Yellow)
+            .Padding(2, 1);
+
+        AnsiConsole.Write(panel);
+    }
+
+    private static void ShowEof() =>
+        AnsiConsole.MarkupLine("[dim]Entrada desconectada (EOF). Encerrando.[/]");
 }
