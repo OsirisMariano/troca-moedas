@@ -20,6 +20,44 @@ public static class TerminalUi
         AnsiConsole.Profile.Width = ResolveWidth(GetWindowWidth());
     }
 
+    /// <summary>
+    /// Limpa a tela e reaplica a configuração de largura, mantendo o mesmo
+    /// comportamento em todas as telas.
+    /// </summary>
+    public static void ConfigureScreen()
+    {
+        AnsiConsole.Clear();
+        Configure();
+        ShowWarningIfNeeded();
+    }
+
+    /// <summary>
+    /// Cabeçalho padrão. <paramref name="context"/> é exibido após o bullet,
+    /// por exemplo "Ambiente: Docker / SQLite" ou "Início › Converter".
+    /// </summary>
+    public static void ShowHeader(string context)
+    {
+        AnsiConsole.MarkupLine($"[cyan bold]TrocaMoedas Pro[/] [dim]v2.0[/]  •  [grey]{context}[/]");
+        AnsiConsole.MarkupLine("[grey]─────────────────────────────────────────────────────────────[/]");
+        AnsiConsole.WriteLine();
+    }
+
+    public static void ShowStep(int current, int total, string label)
+    {
+        AnsiConsole.MarkupLine($"[grey]Etapa [white]{current}[/] de [white]{total}[/]  •  {label}[/]");
+        AnsiConsole.WriteLine();
+    }
+
+    /// <summary>
+    /// Aguarda Enter. Retorna <c>false</c> quando a entrada foi encerrada (EOF).
+    /// </summary>
+    public static bool WaitForEnter(string message = "Pressione Enter para voltar ao menu...")
+    {
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[dim]{message}[/]");
+        return !ConsoleInput.IsEof(ConsoleInput.ReadLine());
+    }
+
     public static void ShowWarningIfNeeded()
     {
         if (_warningShown || Console.IsInputRedirected || GetWindowWidth() > 0)
