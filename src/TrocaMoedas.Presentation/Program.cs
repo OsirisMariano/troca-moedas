@@ -37,6 +37,10 @@ public class Program
 
         services.AddSingleton(httpClient);
 
+        var cacheTtlMinutes = GetCacheTtlMinutes();
+        services.AddSingleton<IExchangeRateCache>(_ =>
+            new InMemoryExchangeRateCache(TimeSpan.FromMinutes(cacheTtlMinutes)));
+
         services.AddSingleton<IExchangeRateService>(sp =>
         {
             if (string.IsNullOrEmpty(apiKey))
@@ -49,7 +53,7 @@ public class Program
             else
             {
                 var client = sp.GetRequiredService<HttpClient>();
-                return new ExchangeRateApiService(client, apiKey);
+                return new ExchangeRateApiService(client, apiKey, sp.GetRequiredService<IExchangeRateCache>());
             }
         });
 
@@ -65,6 +69,12 @@ public class Program
         services.AddTransient<ConvertCommand>();
         services.AddTransient<HistoryCommand>();
         services.AddTransient<MenuCommand>();
+    }
+
+    private static int GetCacheTtlMinutes()
+    {
+        var raw = Environment.GetEnvironmentVariable("EXCHANGE_RATE_CACHE_TTL_MINUTES");
+        return int.TryParse(raw, out var minutes) && minutes > 0 ? minutes : 60;
     }
 
     private static async Task InitializeDatabase(IServiceProvider serviceProvider)
