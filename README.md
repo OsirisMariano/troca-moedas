@@ -23,6 +23,7 @@ Ferramenta de linha de comando para converter valores entre diferentes moedas co
 - Interface de terminal com cabeçalho padronizado, cores e navegação por setas
 - Conversão em 3 etapas guiadas (origem, destino e valor)
 - Histórico com seleção de 10, 25, 50 ou todas as conversões
+- Opção de limpar todo o histórico com confirmação
 - Validação de entrada no próprio prompt, sem voltar ao menu
 - Valores aceitam ponto ou vírgula decimal (`100.50` ou `100,50`)
 - A moeda de origem é removida automaticamente das opções de destino
