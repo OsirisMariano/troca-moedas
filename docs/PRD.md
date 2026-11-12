@@ -129,13 +129,15 @@ troca-moedas/
 
 ## 7. Critérios de Aceite (MVP)
 
-- [ ] Conversão entre BRL e pelo menos 5 moedas com taxa real
-- [ ] Interface de menu com Spectre.Console (setas, tabelas)
-- [ ] Histórico persistido em SQLite e consultável
-- [ ] Testes unitários passando com 80%+ cobertura
-- [ ] `docker compose up --build` funcional (dev)
-- [ ] `docker compose -f docker-compose.prod.yml up --build` funcional (prod)
-- [ ] CI verde no GitHub Actions
+- [x] Conversão entre BRL e pelo menos 5 moedas com taxa real
+- [x] Interface de menu com Spectre.Console (setas, tabelas)
+- [x] Histórico persistido em SQLite e consultável
+- [x] Testes unitários passando com 80%+ cobertura
+- [x] `docker compose up --build` funcional (dev)
+- [x] `docker compose -f docker-compose.prod.yml up --build` funcional (prod)
+- [x] CI verde no GitHub Actions
+
+> Validação detalhada em [docs/mvp-validation.md](./mvp-validation.md).
 
 ## 8. Fora de Escopo (v2.0)
 
@@ -154,7 +156,7 @@ troca-moedas/
 | HTTP | HttpClient nativo | Sem dependências extras |
 | JSON | System.Text.Json | Nativo do .NET, performático |
 | Testes | xUnit + Moq | Padrão da comunidade .NET |
-| API | exchangerate-api.com | Gratuita, sem API key |
+| API | exchangerate-api.com | Plano gratuito com API key; fallback se indisponível |
 | Docker | 100% containerizado | Consistência entre ambientes |
 | Arquitetura | Clean Architecture | Testabilidade, manutenibilidade |
 | DI | Microsoft.Extensions.DependencyInjection | Nativo do .NET
@@ -166,7 +168,7 @@ troca-moedas/
 docker compose up --build
 
 # Rodar testes (em outro terminal)
-docker compose run tests
+./scripts/coverage.sh
 
 # Build de produção
 docker compose -f docker-compose.prod.yml up --build
