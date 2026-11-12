@@ -93,6 +93,24 @@ docker compose up --build
 > printf '1\n1\n1\n100,50\n\n2\n1\n\n4\n' | docker compose run --rm -T app
 > ```
 
+### Produção (imagem otimizada)
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+- Build multi-stage: `sdk:10.0` (build/publish) → `runtime:10.0` (imagem final).
+- Executa como usuário não-root (`app`, uid 1654).
+- O SQLite fica no volume nomeado `troca-moedas-prod-data` (`/app/data`).
+- Sem `restart` automático: o processo termina quando você escolhe **Sair**.
+
+Build e execução diretos:
+
+```bash
+docker build -t troca-moedas:prod .
+docker run --rm -it -v troca-moedas-prod-data:/app/data troca-moedas:prod
+```
+
 ### Sem Docker
 
 > Requer o **.NET SDK 10** instalado (o projeto tem como alvo `net10.0`).
@@ -145,8 +163,10 @@ docker run --rm -v "$PWD":/app -w /app \
 
 ```
 troca-moedas/
+├── Dockerfile
 ├── Dockerfile.dev
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── src/
 │   ├── TrocaMoedas.Domain/              # Entidades (sem dependências)
 │   │   └── Models/
