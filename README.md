@@ -1,5 +1,7 @@
 # Troca Moedas
 
+[![CI](https://github.com/OsirisMariano/troca-moedas/actions/workflows/ci.yml/badge.svg)](https://github.com/OsirisMariano/troca-moedas/actions/workflows/ci.yml)
+
 Conversão de moedas direto do terminal — rápido, prático e containerizado.
 
 ## Sobre
