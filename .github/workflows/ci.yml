@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  CI: true
+
+jobs:
+  build-test:
+    name: Build, testes e cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore troca-moedas.sln
+
+      - name: Build
+        run: dotnet build troca-moedas.sln --configuration Release --no-restore
+
+      - name: Testes com cobertura (limite 80% de linhas)
+        run: >
+          dotnet test tests/CurrencyConverter.Tests/CurrencyConverter.Tests.csproj
+          --configuration Release
+          --no-build
+          --nologo
+          /p:CollectCoverage=true
+          /p:CoverletOutputFormat=cobertura
+          /p:CoverletOutput="$GITHUB_WORKSPACE/coverage/coverage"
+          /p:Threshold=80
+          /p:ThresholdType=line
+          /p:ThresholdStat=total
+          /p:Exclude="[TrocaMoedas.Presentation]*"
+
+      - name: Publicar relatório de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/coverage.cobertura.xml
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,5 +1,7 @@
 # Troca Moedas
 
+[![CI](https://github.com/OsirisMariano/troca-moedas/actions/workflows/ci.yml/badge.svg)](https://github.com/OsirisMariano/troca-moedas/actions/workflows/ci.yml)
+
 Conversão de moedas direto do terminal — rápido, prático e containerizado.
 
 ## Sobre
@@ -93,6 +95,24 @@ docker compose up --build
 > printf '1\n1\n1\n100,50\n\n2\n1\n\n4\n' | docker compose run --rm -T app
 > ```
 
+### Produção (imagem otimizada)
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+- Build multi-stage: `sdk:10.0` (build/publish) → `runtime:10.0` (imagem final).
+- Executa como usuário não-root (`app`, uid 1654).
+- O SQLite fica no volume nomeado `troca-moedas-prod-data` (`/app/data`).
+- Sem `restart` automático: o processo termina quando você escolhe **Sair**.
+
+Build e execução diretos:
+
+```bash
+docker build -t troca-moedas:prod .
+docker run --rm -it -v troca-moedas-prod-data:/app/data troca-moedas:prod
+```
+
 ### Sem Docker
 
 > Requer o **.NET SDK 10** instalado (o projeto tem como alvo `net10.0`).
@@ -145,8 +165,10 @@ docker run --rm -v "$PWD":/app -w /app \
 
 ```
 troca-moedas/
+├── Dockerfile
 ├── Dockerfile.dev
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── src/
 │   ├── TrocaMoedas.Domain/              # Entidades (sem dependências)
 │   │   └── Models/
@@ -209,11 +231,13 @@ troca-moedas/
 - [x] Limpar histórico com confirmação
 - [x] Cobertura 80%+ (atual: 91% em Domain/Application/Infrastructure)
 
-### Sprint 3 — Deploy & CI/CD
-- [ ] Dockerfile multi-stage produção
-- [ ] docker-compose.prod.yml
-- [ ] GitHub Actions CI (build + test)
-- [ ] Validação final MVP
+### Sprint 3 — Deploy & CI/CD ✅
+- [x] Dockerfile multi-stage produção
+- [x] docker-compose.prod.yml
+- [x] GitHub Actions CI (build + test)
+- [x] Validação final MVP
+
+MVP validado em 2026-11-12 — detalhes em [docs/mvp-validation.md](docs/mvp-validation.md).
 
 Veja as [issues detalhadas](https://github.com/OsirisMariano/troca-moedas/issues) para cada tarefa.
 
