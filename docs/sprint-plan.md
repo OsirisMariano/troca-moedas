@@ -1,9 +1,9 @@
 # 📋 Plano de Sprints - Conversor de Moedas Pro (v2.0)
 
 > **Product Owner**: Análise e planejamento criados em 2026-08-20
-> **Última sincronização**: 2026-11-11 — Sprint 2 concluída e promovida para a `main` (PR #46)
+> **Última sincronização**: 2026-11-12 — Sprint 3 concluída e MVP validado (issue #22)
 > **Baseado no**: docs/PRD.md
-> **Status do Projeto**: Clean Architecture concluída; Sprint 2 concluída (49 de 49 SP); Sprint 3 não iniciada
+> **Status do Projeto**: Clean Architecture concluída; Sprint 1, 2 e 3 concluídas (128 de 128 SP); **MVP aprovado**
 > **Arquitetura**: Clean Architecture (4 projetos separados)
 > **Ordem**: Cronológica - siga de cima para baixo para evitar quebras
 
@@ -150,20 +150,22 @@ alternativa garantida, `docker compose run --rm app`.
 
 ---
 
-### 🔴 Sprint 3: Infra & Deploy (Semana 4 do PRD)
+### ✅ Sprint 3: Infra & Deploy (Semana 4 do PRD)
 
-**Objetivo**: Docker production e CI/CD
+**Objetivo**: Docker production e CI/CD — **concluída**
 
 #### 🔢 Ordem de Execução:
 
-| Ordem | ID | Tarefa | SP | Critério de Aceite |
-|-------|----|--------|-----|-------------------|
-| 1️⃣ | P-03-01 | Dockerfile multi-stage produção | 5 | Build otimizado, runtime slim |
-| 2️⃣ | P-03-02 | docker-compose.prod.yml | 3 | Volume persiste DB, ambiente prod |
-| 3️⃣ | P-03-03 | GitHub Actions CI workflow | 5 | Build + teste no push/PR, status badge |
-| 4️⃣ | P-03-04 | Validação final MVP | 3 | Todos critérios de aceite do PRD validados |
+| Ordem | ID | Tarefa | SP | Critério de Aceite | Status |
+|-------|----|--------|-----|-------------------|--------|
+| 1️⃣ | P-03-01 | Dockerfile multi-stage produção | 5 | Build otimizado, runtime slim | ✅ PR #47 |
+| 2️⃣ | P-03-02 | docker-compose.prod.yml | 3 | Volume persiste DB, ambiente prod | ✅ PR #47 |
+| 3️⃣ | P-03-03 | GitHub Actions CI workflow | 5 | Build + teste no push/PR, status badge | ✅ PR #48 |
+| 4️⃣ | P-03-04 | Validação final MVP | 3 | Todos critérios de aceite do PRD validados | ✅ [mvp-validation.md](./mvp-validation.md) |
 
 **Total Sprint 3**: 16 SP | **Duração**: 3-4 dias | **Time**: 1 dev + PO/QA
+
+**Progresso**: 16 de 16 SP concluídos. Todas as issues (#19–#22) fechadas.
 
 **⚠️ Importante**: Docker/CI só funcionam se todos os testes passarem (Sprint 2 concluída).
 
@@ -184,10 +186,10 @@ alternativa garantida, `docker compose run --rm app`.
 | Ordem | Sprint | Semana | SP Planejado | Conclusão | Status |
 |-------|--------|--------|-------------|-----------|--------|
 | ✅ | Sprint 1 | Semana 1-3 | 63 SP | Clean Architecture + SQLite + Histórico + Validação | Concluída |
-| 1️⃣ | Sprint 2 | Semana 2 | 49 SP | Cache + Testes Unitários + Decisões de Design | Em andamento |
-| 2️⃣ | Sprint 3 | Semana 4 | 16 SP | Docker + CI/CD | Pendente |
+| ✅ | Sprint 2 | Semana 2 | 49 SP | Cache + Testes Unitários + Decisões de Design | Concluída |
+| ✅ | Sprint 3 | Semana 4 | 16 SP | Docker + CI/CD + validação do MVP | Concluída |
 
-**MVP Completo estimado**: 1-2 semanas restantes com time de 2 devs
+**MVP Completo**: entregue e validado em 2026-11-12 (128 SP).
 
 ### 📈 Velocity Atual
 - Sprint 1 (Arquitetura + Interatividade): 63 SP completo
@@ -209,13 +211,15 @@ Todas as decisões da Sprint 2 foram resolvidas e as issues fechadas:
 
 ### Estado dos Critérios de Aceite do MVP
 
-- [x] Conversão entre BRL e 5+ moedas com taxa real
-- [x] Interface de menu com Spectre.Console (setas, tabelas)
+- [x] Conversão entre BRL e 5+ moedas com taxa real ✅ **VALIDADO**
+- [x] Interface de menu com Spectre.Console (setas, tabelas) ✅ **VALIDADO**
 - [x] Histórico persistido em SQLite e consultável ✅ **VALIDADO**
-- [x] Testes unitários passando com 80%+ cobertura (atual: 91% em Domain/Application/Infrastructure) ✅ **VALIDADO**
+- [x] Testes unitários passando com 80%+ cobertura (atual: 91,72% em Domain/Application/Infrastructure) ✅ **VALIDADO**
 - [x] `docker compose up --build` funcional (dev) ✅ **VALIDADO**
-- [ ] `docker compose -f docker-compose.prod.yml up --build` funcional (prod) ← Ainda não criado
-- [ ] CI verde no GitHub Actions ← Pendente
+- [x] `docker compose -f docker-compose.prod.yml up --build` funcional (prod) ✅ **VALIDADO**
+- [x] CI verde no GitHub Actions ✅ **VALIDADO**
+
+> Evidências em [docs/mvp-validation.md](./mvp-validation.md).
 
 ---
 
@@ -253,7 +257,7 @@ docker compose exec app bash -c "apt install -y sqlite3 && sqlite3 /app/data/con
 |--------|----------|---------------|
 | CacheService | ExchangeRateApiService com cache | ✅ Concluído na Sprint 2 |
 | Testes unitários - Services | CacheService implementado | ✅ Concluído na Sprint 2 |
-| Docker prod | Testes passando | Sprint 3 - Dockerfile multi-stage |
-| CI/CD | Docker prod + Testes | Sprint 3 - Docker + testes |
+| Docker prod | Testes passando | ✅ Concluído na Sprint 3 |
+| CI/CD | Docker prod + Testes | ✅ Concluído na Sprint 3 |
 
 **💡 Dica**: Arquitetura concluída removeu a maior parte dos bloqueios. Foco agora em testes e infra.

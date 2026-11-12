@@ -231,11 +231,13 @@ troca-moedas/
 - [x] Limpar histórico com confirmação
 - [x] Cobertura 80%+ (atual: 91% em Domain/Application/Infrastructure)
 
-### Sprint 3 — Deploy & CI/CD
-- [ ] Dockerfile multi-stage produção
-- [ ] docker-compose.prod.yml
-- [ ] GitHub Actions CI (build + test)
-- [ ] Validação final MVP
+### Sprint 3 — Deploy & CI/CD ✅
+- [x] Dockerfile multi-stage produção
+- [x] docker-compose.prod.yml
+- [x] GitHub Actions CI (build + test)
+- [x] Validação final MVP
+
+MVP validado em 2026-11-12 — detalhes em [docs/mvp-validation.md](docs/mvp-validation.md).
 
 Veja as [issues detalhadas](https://github.com/OsirisMariano/troca-moedas/issues) para cada tarefa.
 
